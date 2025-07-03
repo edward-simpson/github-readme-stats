@@ -325,6 +325,8 @@ const fetchStats = async (
     followers: user.followers.totalCount,
   });
 
+  stats.followers = user.followers.totalCount;
+
   return stats;
 };
 

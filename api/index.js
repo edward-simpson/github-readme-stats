@@ -9,6 +9,7 @@ import {
 } from "../src/common/utils.js";
 import { fetchStats } from "../src/fetchers/stats-fetcher.js";
 import { isLocaleAvailable } from "../src/translations.js";
+import calculateRank from "../src/calculateRank.js";
 
 export default async (req, res) => {
   const {
@@ -66,16 +67,46 @@ export default async (req, res) => {
   }
 
   try {
-    const showStats = parseArray(show);
-    const stats = await fetchStats(
-      username,
-      parseBoolean(include_all_commits),
-      parseArray(exclude_repo),
-      showStats.includes("prs_merged") ||
+    const summedStats = {}
+    for (let i = 1; i <= 2; i++) {
+      const showStats = parseArray(show);
+      const stats = await fetchStats(
+        username,
+        parseBoolean(include_all_commits),
+        parseArray(exclude_repo),
+        showStats.includes("prs_merged") ||
         showStats.includes("prs_merged_percentage"),
-      showStats.includes("discussions_started"),
-      showStats.includes("discussions_answered"),
-    );
+        showStats.includes("discussions_started"),
+        showStats.includes("discussions_answered"),
+      );
+
+      Object.keys(stats).forEach((key) => {
+        if (["name", "rank"].includes(key)) {
+          if (!summedStats[key]) {
+            summedStats[key] = stats[key];
+          }
+
+          return;
+        }
+
+
+        if (!summedStats[key]) {
+          summedStats[key] = 0;
+        }
+        summedStats[key] += stats[key];
+      })
+    }
+
+    summedStats.rank = calculateRank({
+      all_commits: include_all_commits,
+      commits: summedStats.totalCommits,
+      prs: summedStats.totalPRs,
+      reviews: summedStats.totalReviews,
+      issues: summedStats.totalIssues,
+      repos: summedStats.repositories.totalCount,
+      stars: summedStats.totalStars,
+      followers: summedStats.followers,
+    });
 
     let cacheSeconds = clampValue(
       parseInt(cache_seconds || CONSTANTS.CARD_CACHE_SECONDS, 10),
@@ -92,7 +123,7 @@ export default async (req, res) => {
     );
 
     return res.send(
-      renderStatsCard(stats, {
+      renderStatsCard(summedStats, {
         hide: parseArray(hide),
         show_icons: parseBoolean(show_icons),
         hide_title: parseBoolean(hide_title),
@@ -115,7 +146,7 @@ export default async (req, res) => {
         locale: locale ? locale.toLowerCase() : null,
         disable_animations: parseBoolean(disable_animations),
         rank_icon,
-        show: showStats,
+        show: true,
       }),
     );
   } catch (err) {
