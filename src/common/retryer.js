@@ -35,7 +35,7 @@ const retryer = async (fetcher, variables, retries = 0) => {
     const {envVarNum, ...params} = variables;
     // try to fetch with the first token since RETRIES is 0 index i'm adding +1
     let response = await fetcher(
-      { username: process.env[`PAT_${envVarNum}_USER`],...params },
+      { login: process.env[`PAT_${envVarNum}_USER`],...params },
       process.env[`PAT_${envVarNum}`],
       retries,
     );

@@ -114,7 +114,6 @@ const fetcher = (variables, token) => {
  * @description This function supports multi-page fetching if the 'FETCH_MULTI_PAGE_STARS' environment variable is set to true.
  */
 const statsFetcher = async ({
-  username,
   includeMergedPullRequests,
   includeDiscussions,
   includeDiscussionsAnswers,
@@ -124,7 +123,6 @@ const statsFetcher = async ({
   let endCursor = null;
   while (hasNextPage) {
     const variables = {
-      login: username,
       first: 100,
       after: endCursor,
       includeMergedPullRequests,
@@ -220,17 +218,12 @@ const totalCommitsFetcher = async (username) => {
  * @returns {Promise<StatsData>} Stats data.
  */
 const fetchStats = async (
-  username,
   include_all_commits = false,
   exclude_repo = [],
   include_merged_pull_requests = false,
   include_discussions = false,
   include_discussions_answers = false,
 ) => {
-  if (!username) {
-    throw new MissingParamError(["username"]);
-  }
-
   const stats = {
     name: "",
     totalPRs: 0,
@@ -247,7 +240,6 @@ const fetchStats = async (
   };
 
   let res = await statsFetcher({
-    username,
     includeMergedPullRequests: include_merged_pull_requests,
     includeDiscussions: include_discussions,
     includeDiscussionsAnswers: include_discussions_answers,

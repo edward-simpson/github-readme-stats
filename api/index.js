@@ -13,7 +13,6 @@ import calculateRank from "../src/calculateRank.js";
 
 export default async (req, res) => {
   const {
-    username,
     hide,
     hide_title,
     hide_border,
@@ -42,18 +41,6 @@ export default async (req, res) => {
   } = req.query;
   res.setHeader("Content-Type", "image/svg+xml");
 
-  if (blacklist.includes(username)) {
-    return res.send(
-      renderError("Something went wrong", "This username is blacklisted", {
-        title_color,
-        text_color,
-        bg_color,
-        border_color,
-        theme,
-      }),
-    );
-  }
-
   if (locale && !isLocaleAvailable(locale)) {
     return res.send(
       renderError("Something went wrong", "Language not found", {
@@ -71,7 +58,6 @@ export default async (req, res) => {
     for (let i = 1; i <= 2; i++) {
       const showStats = parseArray(show);
       const stats = await fetchStats(
-        username,
         parseBoolean(include_all_commits),
         parseArray(exclude_repo),
         showStats.includes("prs_merged") ||
