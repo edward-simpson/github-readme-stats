@@ -54,10 +54,11 @@ export default async (req, res) => {
 
   try {
     const summedStats = {}
+    const showStats = parseArray(show);
+
     for (let i = 1; i <= 2; i++) {
       const username = process.env[`PAT_${i}_USER`];
       const pat = process.env[`PAT_${i}`]
-      const showStats = parseArray(show);
       const stats = await fetchStats(
         username,
         pat,
@@ -135,7 +136,7 @@ export default async (req, res) => {
         locale: locale ? locale.toLowerCase() : null,
         disable_animations: parseBoolean(disable_animations),
         rank_icon,
-        show: true,
+        show: showStats,
       }),
     );
   } catch (err) {
