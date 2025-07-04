@@ -97,7 +97,7 @@ export default async (req, res) => {
       stars: summedStats.totalStars,
       followers: summedStats.followers,
     });
-
+// comment to flush cache
     let cacheSeconds = clampValue(
       parseInt(cache_seconds || CONSTANTS.CARD_CACHE_SECONDS, 10),
       CONSTANTS.TWELVE_HOURS,
