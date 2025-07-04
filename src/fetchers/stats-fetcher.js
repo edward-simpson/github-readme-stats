@@ -197,7 +197,7 @@ const totalCommitsFetcher = async (username, pat) => {
   }
 
   const totalCount = res.data.total_count;
-  if (!totalCount || isNaN(totalCount)) {
+  if (typeof totalCount !== "number" || isNaN(totalCount)) {
     throw new CustomError(
       "Could not fetch total commits.",
       CustomError.GITHUB_REST_API_ERROR,
@@ -285,6 +285,10 @@ const fetchStats = async (
     stats.totalCommits = await totalCommitsFetcher(username, pat);
   } else {
     stats.totalCommits = user.contributionsCollection.totalCommitContributions;
+  }
+
+  if (!stats.totalCommits) {
+    user.contributionsCollection.totalCommitContributions;
   }
 
   stats.totalPRs = user.pullRequests.totalCount;

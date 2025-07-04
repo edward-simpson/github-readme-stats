@@ -1,5 +1,4 @@
 import { renderStatsCard } from "../src/cards/stats-card.js";
-import { blacklist } from "../src/common/blacklist.js";
 import {
   clampValue,
   CONSTANTS,
