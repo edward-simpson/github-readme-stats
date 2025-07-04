@@ -92,7 +92,7 @@ export default async (req, res) => {
       prs: summedStats.totalPRs,
       reviews: summedStats.totalReviews,
       issues: summedStats.totalIssues,
-      repos: summedStats.repositories.totalCount,
+      repos: summedStats.repos,
       stars: summedStats.totalStars,
       followers: summedStats.followers,
     });

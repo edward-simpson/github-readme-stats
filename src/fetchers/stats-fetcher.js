@@ -332,6 +332,7 @@ const fetchStats = async (
   });
 
   stats.followers = user.followers.totalCount;
+  stats.repos = user.repositories.totalCount;
 
   return stats;
 };
