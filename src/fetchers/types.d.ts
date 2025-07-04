@@ -43,6 +43,8 @@ export type Lang = {
   name: string;
   color: string;
   size: number;
+  rawSize: number;
+  rawCount: number;
 };
 
 export type TopLangData = Record<string, Lang>;

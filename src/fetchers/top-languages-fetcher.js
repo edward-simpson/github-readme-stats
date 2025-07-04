@@ -67,6 +67,7 @@ const fetcher = (variables, token) => {
  */
 const fetchTopLanguages = async (
   username,
+  pat,
   exclude_repo = [],
   size_weight = 1,
   count_weight = 0,
@@ -75,7 +76,7 @@ const fetchTopLanguages = async (
     throw new MissingParamError(["username"]);
   }
 
-  const res = await retryer(fetcher, { login: username });
+  const res = await retryer(fetcher, { login: username }, pat);
 
   if (res.data.errors) {
     logger.error(res.data.errors);
@@ -139,7 +140,9 @@ const fetchTopLanguages = async (
         [prev.node.name]: {
           name: prev.node.name,
           color: prev.node.color,
+          rawSize: langSize,
           size: langSize,
+          rawCount: repoCount,
           count: repoCount,
         },
       };

@@ -1,5 +1,4 @@
 import { renderTopLanguages } from "../src/cards/top-languages-card.js";
-import { blacklist } from "../src/common/blacklist.js";
 import {
   CONSTANTS,
   parseArray,
@@ -11,7 +10,6 @@ import { isLocaleAvailable } from "../src/translations.js";
 
 export default async (req, res) => {
   const {
-    username,
     hide,
     hide_title,
     hide_border,
@@ -35,18 +33,6 @@ export default async (req, res) => {
   } = req.query;
   res.setHeader("Content-Type", "image/svg+xml");
 
-  if (blacklist.includes(username)) {
-    return res.send(
-      renderError("Something went wrong", "This username is blacklisted", {
-        title_color,
-        text_color,
-        bg_color,
-        border_color,
-        theme,
-      }),
-    );
-  }
-
   if (locale && !isLocaleAvailable(locale)) {
     return res.send(renderError("Something went wrong", "Locale not found"));
   }
@@ -62,12 +48,42 @@ export default async (req, res) => {
   }
 
   try {
-    const topLangs = await fetchTopLanguages(
-      username,
-      parseArray(exclude_repo),
-      size_weight,
-      count_weight,
-    );
+    const topLangsSummed = {};
+    for (let i = 1; i <= 2; i++) {
+      const username = process.env[`PAT_${i}_USER`];
+      const pat = process.env[`PAT_${i}`]
+
+      const topLangs = await fetchTopLanguages(
+        username,
+        pat,
+        parseArray(exclude_repo),
+        size_weight,
+        count_weight,
+      );
+
+      Object.keys(topLangs).forEach((lang) => {
+        if (!topLangsSummed[lang]) {
+          topLangsSummed[lang] = topLangs[lang];
+        } else {
+          topLangsSummed[lang].rawSize += topLangs[lang].rawSize;
+          topLangsSummed[lang].rawCount += topLangs[lang].rawCount;
+        }
+      })
+    }
+
+    Object.keys(topLangsSummed).forEach((name) => {
+      // comparison index calculation
+      topLangsSummed[name].size =
+        Math.pow(topLangsSummed[name].rawSize, size_weight) *
+        Math.pow(topLangsSummed[name].rawCount, count_weight);
+    });
+
+    const topLangs = Object.keys(topLangsSummed)
+      .sort((a, b) => topLangsSummed[b].size - topLangsSummed[a].size)
+      .reduce((result, key) => {
+        result[key] = topLangsSummed[key];
+        return result;
+      }, {});
 
     let cacheSeconds = parseInt(
       cache_seconds || CONSTANTS.TOP_LANGS_CACHE_SECONDS,
