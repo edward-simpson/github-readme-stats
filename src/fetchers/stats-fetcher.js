@@ -114,24 +114,25 @@ const fetcher = (variables, token) => {
  * @description This function supports multi-page fetching if the 'FETCH_MULTI_PAGE_STARS' environment variable is set to true.
  */
 const statsFetcher = async ({
+  username,
+                              pat,
   includeMergedPullRequests,
   includeDiscussions,
   includeDiscussionsAnswers,
-                              envVarNum
 }) => {
   let stats;
   let hasNextPage = true;
   let endCursor = null;
   while (hasNextPage) {
     const variables = {
+      login: username,
       first: 100,
       after: endCursor,
       includeMergedPullRequests,
       includeDiscussions,
       includeDiscussionsAnswers,
-      envVarNum
     };
-    let res = await retryer(fetcher, variables);
+    let res = await retryer(fetcher, variables, pat);
     if (res.data.errors) {
       return res;
     }
@@ -162,12 +163,13 @@ const statsFetcher = async ({
  * Fetch all the commits for all the repositories of a given username.
  *
  * @param {string} username GitHub username.
+ * @param {string} pat GitHub pat.
  * @returns {Promise<number>} Total commits.
  *
  * @description Done like this because the GitHub API does not provide a way to fetch all the commits. See
  * #92#issuecomment-661026467 and #211 for more information.
  */
-const totalCommitsFetcher = async (username) => {
+const totalCommitsFetcher = async (username, pat) => {
   if (!githubUsernameRegex.test(username)) {
     logger.log("Invalid username provided.");
     throw new Error("Invalid username provided.");
@@ -188,7 +190,7 @@ const totalCommitsFetcher = async (username) => {
 
   let res;
   try {
-    res = await retryer(fetchTotalCommits, { login: username });
+    res = await retryer(fetchTotalCommits, { login: username }, pat);
   } catch (err) {
     logger.log(err);
     throw new Error(err);
@@ -212,6 +214,7 @@ const totalCommitsFetcher = async (username) => {
  * Fetch stats for a given username.
  *
  * @param {string} username GitHub username.
+ * @param {string} pat GitHub pat.
  * @param {boolean} include_all_commits Include all commits.
  * @param {string[]} exclude_repo Repositories to exclude.
  * @param {boolean} include_merged_pull_requests Include merged pull requests.
@@ -220,12 +223,13 @@ const totalCommitsFetcher = async (username) => {
  * @returns {Promise<StatsData>} Stats data.
  */
 const fetchStats = async (
+  username,
+  pat,
   include_all_commits = false,
   exclude_repo = [],
   include_merged_pull_requests = false,
   include_discussions = false,
   include_discussions_answers = false,
-  envVarNum
 ) => {
   const stats = {
     name: "",
@@ -242,11 +246,13 @@ const fetchStats = async (
     rank: { level: "C", percentile: 100 },
   };
 
-  let res = await statsFetcher({
+  let res = await statsFetcher(
+    {
+      username,
+      pat,
     includeMergedPullRequests: include_merged_pull_requests,
     includeDiscussions: include_discussions,
     includeDiscussionsAnswers: include_discussions_answers,
-    envVarNum
   });
 
   // Catch GraphQL errors.
@@ -276,7 +282,7 @@ const fetchStats = async (
 
   // if include_all_commits, fetch all commits using the REST API.
   if (include_all_commits) {
-    stats.totalCommits = await totalCommitsFetcher(username);
+    stats.totalCommits = await totalCommitsFetcher(username, pat);
   } else {
     stats.totalCommits = user.contributionsCollection.totalCommitContributions;
   }

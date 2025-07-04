@@ -56,15 +56,18 @@ export default async (req, res) => {
   try {
     const summedStats = {}
     for (let i = 1; i <= 2; i++) {
+      const username = process.env[`PAT_${i}_USER`];
+      const pat = process.env[`PAT_${i}`]
       const showStats = parseArray(show);
       const stats = await fetchStats(
+        username,
+        pat,
         parseBoolean(include_all_commits),
         parseArray(exclude_repo),
         showStats.includes("prs_merged") ||
         showStats.includes("prs_merged_percentage"),
         showStats.includes("discussions_started"),
         showStats.includes("discussions_answered"),
-        i
       );
 
       Object.keys(stats).forEach((key) => {

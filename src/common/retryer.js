@@ -6,7 +6,8 @@ import { CustomError, logger } from "./utils.js";
 const PATs = Object.keys(process.env).filter((key) =>
   /PAT_\d*$/.exec(key),
 ).length;
-const RETRIES = process.env.NODE_ENV === "test" ? 7 : PATs;
+// const RETRIES = process.env.NODE_ENV === "test" ? 7 : PATs;
+const RETRIES = 7;
 
 /**
  * @typedef {import("axios").AxiosResponse} AxiosResponse Axios response.
@@ -18,10 +19,11 @@ const RETRIES = process.env.NODE_ENV === "test" ? 7 : PATs;
  *
  * @param {FetcherFunction} fetcher The fetcher function.
  * @param {object} variables Object with arguments to pass to the fetcher function.
+ * @param {string} pat
  * @param {number} retries How many times to retry.
  * @returns {Promise<T>} The response from the fetcher function.
  */
-const retryer = async (fetcher, variables, retries = 0) => {
+const retryer = async (fetcher, variables, pat, retries = 0) => {
   if (!RETRIES) {
     throw new CustomError("No GitHub API tokens found", CustomError.NO_TOKENS);
   }
@@ -32,11 +34,10 @@ const retryer = async (fetcher, variables, retries = 0) => {
     );
   }
   try {
-    const {envVarNum, ...params} = variables;
     // try to fetch with the first token since RETRIES is 0 index i'm adding +1
     let response = await fetcher(
-      { login: process.env[`PAT_${envVarNum}_USER`],...params },
-      process.env[`PAT_${envVarNum}`],
+      variables,
+      pat,
       retries,
     );
 
@@ -49,7 +50,7 @@ const retryer = async (fetcher, variables, retries = 0) => {
       logger.log(`PAT_${retries + 1} Failed`);
       retries++;
       // directly return from the function
-      return retryer(fetcher, variables, retries);
+      return retryer(fetcher, variables, pat, retries);
     }
 
     // finally return the response
@@ -66,7 +67,7 @@ const retryer = async (fetcher, variables, retries = 0) => {
       logger.log(`PAT_${retries + 1} Failed`);
       retries++;
       // directly return from the function
-      return retryer(fetcher, variables, retries);
+      return retryer(fetcher, variables, pat, retries);
     } else {
       return err.response;
     }
