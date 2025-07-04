@@ -74,8 +74,8 @@ export default async (req, res) => {
     Object.keys(topLangsSummed).forEach((name) => {
       // comparison index calculation
       topLangsSummed[name].size =
-        Math.pow(topLangsSummed[name].rawSize, size_weight) *
-        Math.pow(topLangsSummed[name].rawCount, count_weight);
+        Math.pow(topLangsSummed[name].rawSize, size_weight ?? 1) *
+        Math.pow(topLangsSummed[name].rawCount, count_weight ?? 0);
     });
 
     const topLangs = Object.keys(topLangsSummed)
